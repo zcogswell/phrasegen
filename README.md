@@ -23,18 +23,27 @@ Internet connection for word dictionary
 phrasegen.py [-h] [-w WORDS] [-p PHRASES] [-U URL] [-n] [-s]
 
 optional arguments:
-  -h, --help            show this help message and exit
+
+  -h, --help
+
+    show this help message and exit
 
   -w WORDS, --words WORDS
 
-                        Number of words in phrase
+    Number of words in phrase
 
   -p PHRASES, --phrases PHRASES
 
-                        Number of phrases to print
+    Number of phrases to print
 
-  -U URL, --url URL     Dictionary URL
+  -U URL, --url URL
 
-  -n, --num             Bans numbers
+    Dictionary URL
+
+  -n, --num
+
+    Bans numbers
   
-  -s, --sym             Bans symbols
+  -s, --sym
+  
+    Bans symbols
