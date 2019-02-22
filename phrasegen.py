@@ -1,44 +1,82 @@
 #!/usr/bin/env python3
-import urllib.request, secrets, string
+import urllib.request, urllib.error, secrets, string, sys
+from argparse import ArgumentParser
 
-WORD_URL = 'http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain'
-NUM_WORDS = 3
-NUM_PHRASES = 10
+def parse_arguments():
+    """Runs argparse
 
-#TODO add arguments for NUM_WORDS, if numbers or symbols
+    Returns:
+        argparse.Namespace -- collection of args from cmd line
+    """
+    parser = ArgumentParser()
+    parser.add_argument('-w', '--words', default='3', help='Number of words in phrase')
+    parser.add_argument('-p', '--phrases', default='10', help='Number of phrases to print')
+    parser.add_argument('-u', '--url', default=\
+        'http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain', help='Dictionary URL')
+    parser.add_argument('-n', '--num', action='store_false', help='Bans numbers')
+    parser.add_argument('-s', '--sym', action='store_false', help='Bans symbols')
+    args = parser.parse_args()
+    if not args.words.isnumeric():
+        print('words argument not numeric', file=sys.stderr)
+        sys.exit(1)
+    if not args.phrases.isnumeric():
+        print('phrases argument not numeric', file=sys.stderr)
+        sys.exit(1)
+    return args
 
-def valid_phrase(phrase):
-    if any(c.isupper() for c in phrase):
-        if any(c.islower() for c in phrase):
-            if any(c.isdigit() for c in phrase):
-                if any(c in string.punctuation for c in phrase):
+def valid_phrase(phrase, args):
+    """ Checks generated passphrase for validity against script arguments
+
+    Arguments:
+        phrase {string} -- passphrase being checked
+        args {dict} -- program arguments
+
+    Returns:
+        bool -- True if passed checks, False otherwise
+    """
+    if any(c.isupper() for c in phrase): # upper case
+        if any(c.islower() for c in phrase): # lower case
+            if any(c.isdigit() for c in phrase) or not args.num: # number
+                if any(c in string.punctuation for c in phrase) or not args.sym: # letter
                     return True
     return False
 
 def main():
-    response = urllib.request.urlopen(WORD_URL)
-    words = response.read().decode().splitlines()
-    nonalpha = string.digits + string.punctuation
-    pw = symbol = ''
-    for i in range(NUM_PHRASES):
-        while not valid_phrase(pw):
+    """ Main function
+    Gathers dictionary from URL, generates passphrases, and prints passphrases
+    """
+
+    conf = parse_arguments()
+    try:
+        response = urllib.request.urlopen(conf.url)
+        words = response.read().decode().splitlines()
+    except Exception:
+        print('web request failure', file=sys.stderr)
+        sys.exit(2)
+    
+    nonalpha = ''
+    if conf.num:
+        nonalpha += string.digits
+    if conf.sym:
+        nonalpha += string.punctuation
+    #nonalpha = string.digits + string.punctuation
+    for i in range(int(conf.phrases)):
+        pw = ''
+        while not valid_phrase(pw, conf):
+            # rerolls passphrase until valid
             pw = ''
-            if secrets.randbits(1) == 1:
+            if secrets.randbits(1) == 1 and len(nonalpha) > 0:
+                # 50% chance of number or symbol at beginning versus letter
                 pw += secrets.choice(nonalpha)
-            for j in range(NUM_WORDS - 1):
+            for j in range(int(conf.words)):
                 if secrets.randbits(1) == 0:
                     pw += secrets.choice(words).upper()
                 else:
                     pw += secrets.choice(words).lower()
-                pw += secrets.choice(nonalpha)
-            if secrets.randbits(1) == 0:
-                pw += secrets.choice(words).upper()
-            else:
-                pw += secrets.choice(words).lower()
-            if secrets.randbits(1) == 0:
-                pw += secrets.choice(nonalpha)
+                if secrets.randbits(1) == 1 and len(nonalpha) > 0:
+                    # 50% chance of number or symbol between words and at the end
+                    pw += secrets.choice(nonalpha)
         print(pw + '\t' + str(len(pw)))
-        pw = ''
 
 if __name__ == "__main__":
     main()
