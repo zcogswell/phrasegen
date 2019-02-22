@@ -36,7 +36,7 @@ optional arguments:
 
     Number of phrases to print
 
-  -U URL, --url URL
+  -u URL, --url URL
 
     Dictionary URL
 
@@ -45,5 +45,5 @@ optional arguments:
     Bans numbers
   
   -s, --sym
-  
+
     Bans symbols
