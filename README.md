@@ -24,10 +24,17 @@ phrasegen.py [-h] [-w WORDS] [-p PHRASES] [-U URL] [-n] [-s]
 
 optional arguments:
   -h, --help            show this help message and exit
+
   -w WORDS, --words WORDS
+
                         Number of words in phrase
+
   -p PHRASES, --phrases PHRASES
+
                         Number of phrases to print
+
   -U URL, --url URL     Dictionary URL
+
   -n, --num             Bans numbers
+  
   -s, --sym             Bans symbols
