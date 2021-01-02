@@ -11,8 +11,7 @@ def parse_arguments():
     parser = ArgumentParser()
     parser.add_argument('-w', '--words', default='3', help='Number of words in phrase')
     parser.add_argument('-p', '--phrases', default='10', help='Number of phrases to print')
-    parser.add_argument('-u', '--url', default=\
-        'http://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain', help='Dictionary URL')
+    parser.add_argument('-u', '--url', help='Dictionary URL')
     parser.add_argument('-n', '--num', action='store_false', help='Bans numbers')
     parser.add_argument('-s', '--sym', action='store_false', help='Bans symbols')
     args = parser.parse_args()
@@ -47,13 +46,21 @@ def main():
     """
 
     conf = parse_arguments()
-    try:
-        response = urllib.request.urlopen(conf.url)
-        words = response.read().decode().splitlines()
-    except Exception:
-        print('web request failure', file=sys.stderr)
-        sys.exit(2)
-    
+    if conf.url:
+        try:
+            response = urllib.request.urlopen(conf.url)
+            words = response.read().decode().splitlines()
+        except urllib.error.URLError:
+            print('web request failure', file=sys.stderr)
+            sys.exit(2)
+    else:
+        try:
+            with open('/usr/share/dict/words', 'r') as f:
+                words = f.read().splitlines()
+        except OSError:
+            print('no dictionary file', file=sys.stderr)
+            sys.exit(3)
+        
     nonalpha = ''
     if conf.num:
         nonalpha += string.digits
